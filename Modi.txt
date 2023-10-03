@@ -1,0 +1,78 @@
+import numpy as np
+
+def northwest_corner_method(supply, demand, costs):
+    num_suppliers = len(supply)
+    num_consumers = len(demand)
+    
+    allocated = np.zeros((num_suppliers, num_consumers))
+    
+    supplier_idx = 0
+    consumer_idx = 0
+    
+    while supplier_idx < num_suppliers and consumer_idx < num_consumers:
+        allocation = min(supply[supplier_idx], demand[consumer_idx])
+        allocated[supplier_idx][consumer_idx] = allocation
+        
+        supply[supplier_idx] -= allocation
+        demand[consumer_idx] -= allocation
+        
+        if supply[supplier_idx] == 0:
+            supplier_idx += 1
+        else:
+            consumer_idx += 1
+            
+    return allocated
+
+def modi_method(cost_matrix):
+    # Same MODI method code as before
+    num_rows, num_cols = cost_matrix.shape
+    ui = np.zeros(num_rows)
+    vj = np.zeros(num_cols)
+    while True:
+        # Step 2: Determine dual variables ui and vj
+        for i in range(num_rows):
+            for j in range(num_cols):
+                if cost_matrix[i, j] is not None:
+                    cost_ij = cost_matrix[i, j] - (ui[i] + vj[j])
+                    if cost_ij == 0:
+                        cost_matrix[i, j] = None  # Mark as occupied
+        # Step 3: Compute opportunity costs
+        opportunity_costs = np.zeros_like(cost_matrix)
+        for i in range(num_rows):
+            for j in range(num_cols):
+                if cost_matrix[i, j] is not None:
+                    opportunity_costs[i, j] = cost_matrix[i, j] - (ui[i] + vj[j])
+        # Step 4: Check for optimality
+        min_cost = np.min(opportunity_costs)
+        if min_cost >= 0:
+            break
+        # Step 5: Find cell with smallest negative opportunity cost
+        min_indices = np.argwhere(opportunity_costs == min_cost)
+        entering_cell = min_indices[0]  # Choose the first cell for simplicity
+        # Step 6: Draw closed path
+        closed_path = [(entering_cell[0], entering_cell[1])]
+        # Add code here to implement closed path drawing
+        # Steps 7 and 8: Assign signs and determine maximum units to ship
+        # Add code here to implement sign assignment and unit shipping
+    return cost_matrix, ui, vj
+
+# Example input (replace with your actual data)
+supply = [250, 350, 400]
+demand = [200, 300, 350,150]
+costs = np.array([[3, 1, 7,4],
+                  [2, 6, 5,9],
+                  [8, 3,3, 2]])
+
+# Apply Northwest Corner Method
+allocated = northwest_corner_method(supply.copy(), demand.copy(), costs)
+
+# Apply MODI Method
+final_cost_matrix, dual_variables_ui, dual_variables_vj = modi_method(costs.copy())
+
+# Calculate total cost after allocation
+total_cost_after_allocation = np.sum(allocated * costs)
+print("Total Cost After Initial Allocation:", total_cost_after_allocation)
+
+# Calculate final total cost after MODI optimization
+final_total_cost = np.sum(final_cost_matrix * costs)
+print("Final Total Cost After MODI Optimization:", final_total_cost)
